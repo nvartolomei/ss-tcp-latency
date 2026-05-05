@@ -58,9 +58,14 @@ listener::handle_connection(ss::abort_source& as, ss::connected_socket socket) {
 
         auto payload_len = ss::read_be<int64_t>(
           header_buf.get() + sizeof(int64_t));
-        co_await socket_istream.read_exactly(payload_len);
+        auto payload_buf = co_await socket_istream.read_exactly(payload_len);
 
-        co_await socket_ostream.write(header_buf.share(0, sizeof(int64_t)));
+        if (_echo) {
+            co_await socket_ostream.write(header_buf.share());
+            co_await socket_ostream.write(std::move(payload_buf));
+        } else {
+            co_await socket_ostream.write(header_buf.share(0, sizeof(int64_t)));
+        }
         co_await socket_ostream.flush();
     }
 

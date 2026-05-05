@@ -37,11 +37,13 @@ public:
       ss::logger* logger,
       ss::socket_address remote_addr,
       std::chrono::microseconds send_interval,
-      int64_t send_bytes)
+      int64_t send_bytes,
+      bool echo = false)
       : _logger(logger)
       , _remote_addr(std::move(remote_addr))
       , _send_interval(send_interval)
       , _send_bytes(send_bytes)
+      , _echo(echo)
       , _latencies(
           boost::accumulators::extended_p_square_probabilities = quantiles) {}
 
@@ -52,6 +54,7 @@ private:
     ss::socket_address _remote_addr;
     std::chrono::microseconds _send_interval;
     int64_t _send_bytes;
+    bool _echo;
 
     int64_t _seq_num = 0;
 

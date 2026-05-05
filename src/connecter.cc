@@ -65,8 +65,11 @@ ss::future<> connecter::run(ss::abort_source& as) {
         // disabling the flush poller.
         auto flush_fut = socket_ostream.flush();
 
-        auto in_buf = co_await socket_istream.read_exactly(sizeof(_seq_num));
-        if (in_buf.size() != sizeof(_seq_num)) {
+        size_t response_size = _echo ? sizeof(_seq_num) + sizeof(_send_bytes)
+                                         + _send_bytes
+                                     : sizeof(_seq_num);
+        auto in_buf = co_await socket_istream.read_exactly(response_size);
+        if (in_buf.size() != response_size) {
             throw std::runtime_error("Unexpected EOF");
         }
 

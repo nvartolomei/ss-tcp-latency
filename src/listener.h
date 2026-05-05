@@ -10,9 +10,10 @@
 
 class listener {
 public:
-    listener(ss::logger* logger, ss::socket_address addr)
+    listener(ss::logger* logger, ss::socket_address addr, bool echo = false)
       : _logger(logger)
-      , _addr(std::move(addr)) {}
+      , _addr(std::move(addr))
+      , _echo(echo) {}
 
     ss::future<> run(ss::abort_source& as);
     ss::future<> close() { return _gate.close(); }
@@ -26,4 +27,5 @@ private:
     ss::socket_address _addr;
     ss::server_socket _listener;
     ss::gate _gate;
+    bool _echo;
 };

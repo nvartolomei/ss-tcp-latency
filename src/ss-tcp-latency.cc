@@ -38,6 +38,11 @@ int main(int argc, char** argv) {
       "number of bytes to send in each message (on top of the 16 bytes "
       "header)");
 
+    app.add_options()(
+      "echo",
+      po::bool_switch()->default_value(false),
+      "echo full message back instead of header only (default: off)");
+
     return app.run(argc, argv, [&] {
         seastar::engine().at_exit([] {
             logger.info("ss-tcp-latency is shutting down");
@@ -76,7 +81,9 @@ int main(int argc, char** argv) {
               opts["listen"].as<ss::sstring>());
 
             auto l = listener(
-              &logger, ss::ipv4_addr(opts["listen"].as<ss::sstring>()));
+              &logger,
+              ss::ipv4_addr(opts["listen"].as<ss::sstring>()),
+              opts["echo"].as<bool>());
 
             return ss::do_with(std::move(l), [](auto& l) {
                 return l.run(as).then([] { return 0; }).finally([&l] {
@@ -91,9 +98,10 @@ int main(int argc, char** argv) {
             auto c = connecter(
               &logger,
               ss::ipv4_addr(opts["connect"].as<ss::sstring>()),
-              std::chrono::microseconds(static_cast<int64_t>(
-                opts["send-interval"].as<double>() * 1e6)),
-                opts["send-bytes"].as<uint64_t>());
+              std::chrono::microseconds(
+                static_cast<int64_t>(opts["send-interval"].as<double>() * 1e6)),
+              opts["send-bytes"].as<uint64_t>(),
+              opts["echo"].as<bool>());
 
             return ss::do_with(std::move(c), [](auto& c) {
                 return c.run(as).then([] { return 0; });
